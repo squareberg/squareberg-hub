@@ -1,0 +1,15 @@
+[app]
+name = "hello"
+display_name = "Hello World"
+description = "A minimal example app for testing the Squareberg hub"
+version = "0.1.0"
+
+[backend]
+module = "app:app"
+
+[frontend]
+active = ["default"]
+
+[frontend.default]
+path = "frontend/default"
+display_name = "Default"

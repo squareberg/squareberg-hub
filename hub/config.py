@@ -1,0 +1,126 @@
+"""Hub configuration loading and directory resolution."""
+
+from __future__ import annotations
+
+import logging
+import os
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger("squareberg.config")
+
+# ---------------------------------------------------------------------------
+# TOML parsing — use stdlib tomllib on 3.11+, fall back to tomli
+# ---------------------------------------------------------------------------
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    try:
+        import tomli as tomllib  # type: ignore[no-redef]
+    except ImportError as exc:
+        raise ImportError(
+            "tomli is required on Python <3.11. Install it with: pip install tomli"
+        ) from exc
+
+
+def _read_toml(path: Path) -> dict:
+    """Read and parse a TOML file."""
+    with open(path, "rb") as fh:
+        return tomllib.load(fh)
+
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+def _hub_root() -> Path:
+    """Return the hub/ directory (the directory containing this file)."""
+    return Path(__file__).resolve().parent
+
+
+def _project_root() -> Path:
+    """Return the squareberg project root (parent of hub/)."""
+    return _hub_root().parent
+
+
+# ---------------------------------------------------------------------------
+# Config dataclass
+# ---------------------------------------------------------------------------
+
+@dataclass
+class HubConfig:
+    host: str = "127.0.0.1"
+    port: int = 9100
+    socket_mode: str = "xdg"  # "xdg" or "local"
+    log_level: str = "info"
+    log_dir: Optional[str] = None
+
+
+def load_config(path: Path | None = None) -> HubConfig:
+    """Load hub configuration from a TOML file.
+
+    Falls back to defaults if the file does not exist.
+    """
+    if path is None:
+        path = _hub_root() / "config.toml"
+
+    if not path.exists():
+        logger.debug("Config file not found at %s; using defaults.", path)
+        return HubConfig()
+
+    logger.debug("Loading config from %s", path)
+    data = _read_toml(path)
+    hub = data.get("hub", {})
+    sockets = hub.get("sockets", {})
+    logging_cfg = hub.get("logging", {})
+
+    log_dir_raw = logging_cfg.get("dir", "") or None
+
+    return HubConfig(
+        host=hub.get("host", "127.0.0.1"),
+        port=hub.get("port", 9100),
+        socket_mode=sockets.get("mode", "xdg"),
+        log_level=logging_cfg.get("level", "info"),
+        log_dir=log_dir_raw,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Directory helpers
+# ---------------------------------------------------------------------------
+
+def _xdg_data_home() -> Path:
+    return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+
+
+def get_socket_dir(config: HubConfig | None = None) -> Path:
+    """Resolve the socket directory and create it if needed."""
+    mode = config.socket_mode if config else "xdg"
+
+    if mode == "xdg":
+        sock_dir = _xdg_data_home() / "squareberg" / "sockets"
+    else:
+        sock_dir = _project_root() / "sockets"
+
+    sock_dir.mkdir(parents=True, exist_ok=True)
+    return sock_dir
+
+
+def get_log_dir(config: HubConfig | None = None) -> Path:
+    """Resolve the log directory and create it if needed."""
+    if config and config.log_dir:
+        log_dir = Path(config.log_dir)
+    else:
+        log_dir = _xdg_data_home() / "squareberg" / "logs"
+
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir
+
+
+def get_apps_dir() -> Path:
+    """Return the apps/ directory under the project root, creating it if needed."""
+    apps_dir = _project_root() / "apps"
+    apps_dir.mkdir(parents=True, exist_ok=True)
+    return apps_dir

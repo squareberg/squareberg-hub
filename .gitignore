@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+*.whl
+
+# Node / frontend
+node_modules/
+frontend/*/dist/
+hub/dashboard/dist/
+.parcel-cache/
+
+# Squareberg runtime
+apps/
+sockets/
+scratch/
+
+# Data and logs
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
