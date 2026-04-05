@@ -374,8 +374,8 @@ When `sqb app add` is invoked:
 
 1. **Acquire source**: clone the Git repository or copy the local directory into `apps/{name}/` (or `apps/{custom-name}/` if `--as` is used).
 2. **Validate manifest**: read `.squareberg/manifest.toml`, verify required fields.
-3. **Create virtual environment**: `python -m venv apps/{name}/.venv` within the app directory.
-4. **Install Python dependencies**: `apps/{name}/.venv/bin/pip install -r backend/pyproject.toml` (or equivalent).
+3. **Create virtual environment**: `uv venv apps/{name}/.venv` within the app directory.
+4. **Install Python dependencies**: `uv pip install -e apps/{name}/backend/` (using the app's venv Python).
 5. **Build active frontend(s)**: `cd frontend/{active_frontend} && npm install && npm run build` for each active frontend.
 6. **Register in hub**: add the app to the hub's internal registry so it appears in the dashboard and can be started.
 

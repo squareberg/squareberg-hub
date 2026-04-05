@@ -22,6 +22,9 @@ apps/
 sockets/
 scratch/
 
+# Docs build
+site/
+
 # Data and logs
 data/
 *.sqlite

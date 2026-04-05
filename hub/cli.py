@@ -38,6 +38,18 @@ console = Console()
 _config = load_config()
 _HUB_URL = f"http://{_config.host}:{_config.port}"
 
+
+def _uv() -> str:
+    """Return the path to the uv binary, or abort with a clear message."""
+    path = shutil.which("uv")
+    if path is None:
+        console.print(
+            "[red]uv not found.[/red] Install it from https://docs.astral.sh/uv/ "
+            "or ensure it is on your PATH."
+        )
+        raise typer.Exit(1)
+    return path
+
 # ---------------------------------------------------------------------------
 # Typer apps
 # ---------------------------------------------------------------------------
@@ -210,23 +222,21 @@ def _build_frontend(app_dir: Path, fe_rel_path: str) -> None:
 
 
 def _install_backend(app_dir: Path) -> None:
-    """Create venv and install backend deps."""
+    """Create venv and install backend deps using uv."""
+    uv = _uv()
     venv_dir = app_dir / ".venv"
     console.print(f"  [dim]Creating venv:[/dim] {venv_dir}")
-    _run_cmd(
-        [sys.executable, "-m", "venv", str(venv_dir)],
-        label="python3 -m venv",
-    )
-    pip = venv_dir / "bin" / "pip"
+    _run_cmd([uv, "venv", str(venv_dir)], label="uv venv")
     backend_dir = app_dir / "backend"
     if backend_dir.is_dir():
         _run_cmd(
-            [str(pip), "install", "-e", str(backend_dir)],
+            [uv, "pip", "install", "-e", str(backend_dir),
+             "--python", str(venv_dir / "bin" / "python")],
             cwd=app_dir,
-            label="pip install -e backend/",
+            label="uv pip install -e backend/",
         )
     else:
-        console.print("  [yellow]No backend/ directory; skipping pip install.[/yellow]")
+        console.print("  [yellow]No backend/ directory; skipping dependency install.[/yellow]")
 
 
 def _build_active_frontends(app_dir: Path, manifest: dict) -> None:
