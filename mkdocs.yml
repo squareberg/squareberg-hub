@@ -1,6 +1,6 @@
 site_name: Squareberg
 site_description: A local application hub for personal productivity tools
-site_url: ""
+site_url: https://jhadida.github.io/squareberg/
 repo_url: https://github.com/jhadida/squareberg
 repo_name: squareberg
 docs_dir: docs
