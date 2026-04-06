@@ -19,6 +19,7 @@ hub/dashboard/dist/
 
 # Squareberg runtime
 scratch/
+sockets/
 
 # Docs build
 site/

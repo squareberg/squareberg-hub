@@ -37,10 +37,12 @@ squareberg/
 └── mkdocs.yml                  # Documentation site config
 ```
 
-**Important runtime directories** (gitignored, created dynamically):
-- `apps/` — where installed apps live at runtime (populated by `sqb app add`)
-- `sockets/` — fallback Unix socket directory (dev mode)
-- `$XDG_DATA_HOME/squareberg/` — sockets, logs, and apps in production
+**Runtime directories** (under `$XDG_DATA_HOME/squareberg/`, i.e. `~/.local/share/squareberg/`):
+- `apps/` — installed apps (populated by `sqb app add`)
+- `sockets/` — Unix domain socket files for running apps
+- `logs/` — per-app log files
+
+A `sockets/` fallback directory can be created in-repo only if `hub/config.toml` explicitly sets `mode = "local"` (not the default).
 
 ## How the hub works
 
