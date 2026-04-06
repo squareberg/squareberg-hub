@@ -24,7 +24,7 @@ Start the Squareberg hub server in the foreground.
 sqb start
 ```
 
-The hub reads `hub/config.toml` (falling back to defaults if absent), scans `apps/` and `examples/` for installed apps, mounts static file directories, and begins listening on `127.0.0.1:9100`.
+The hub reads `hub/config.toml` (falling back to defaults if absent), scans the apps data directory and in-tree `examples/` for apps, mounts static file directories, and begins listening on `127.0.0.1:9100`.
 
 If the hub is already running, the command exits immediately with a notice.
 
@@ -97,10 +97,10 @@ sqb app add <source> [--as NAME]
 
 **What this command does:**
 
-1. Clones the Git repository (or copies the local directory) into `apps/{name}/`
+1. Clones the Git repository (or copies the local directory) into `$XDG_DATA_HOME/squareberg/apps/{name}/`
 2. Reads `.squareberg/manifest.toml` to determine the app name
-3. Creates `apps/{name}/.venv` using `uv venv`
-4. Installs Python dependencies: `uv pip install -e apps/{name}/backend/`
+3. Creates a `.venv` in the app directory using `uv venv`
+4. Installs Python dependencies: `uv pip install -e backend/`
 5. Builds each active frontend: `npm install && npm run build`
 
 **Examples:**
@@ -133,7 +133,7 @@ sqb app remove <name>
 |----------|-------------|
 | `name` | Name of the app to remove |
 
-If the hub is running, the app is stopped gracefully before its directory is deleted. The entire `apps/{name}/` directory is removed, including the venv and data.
+If the hub is running, the app is stopped gracefully before its directory is deleted. The entire app directory is removed from `$XDG_DATA_HOME/squareberg/apps/`, including the venv and data.
 
 **Example:**
 
@@ -227,7 +227,7 @@ sqb app update <name>
 |----------|-------------|
 | `name` | Name of the app to update |
 
-Runs `git pull` in `apps/{name}/`, reinstalls Python dependencies, and rebuilds active frontends. The app must have been installed from a Git source (i.e., `apps/{name}/.git` must exist).
+Runs `git pull` in the app's directory, reinstalls Python dependencies, and rebuilds active frontends. The app must have been installed from a Git source (i.e., the app directory must contain a `.git` folder).
 
 **Example:**
 

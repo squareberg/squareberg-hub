@@ -48,7 +48,7 @@ export function AppCard({ app, onRefresh }) {
           </a>
           <a
             class="btn btn-sm btn-outline"
-            href={`/registry/${app.name}/spec`}
+            href={`/registry/${app.name}/view`}
             target="_blank"
             rel="noopener"
           >

@@ -8,7 +8,7 @@ General metadata about the app.
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `name` | string | yes | — | Short, unique identifier. Used as the URL prefix (`/apps/{name}/`), directory name in `apps/`, and socket filename. Must be lowercase, with hyphens allowed. |
+| `name` | string | yes | — | Short, unique identifier. Used as the URL prefix (`/apps/{name}/`), the app directory name, and socket filename. Must be lowercase, with hyphens allowed. |
 | `display_name` | string | no | value of `name` | Human-readable name shown in the dashboard. |
 | `description` | string | no | `""` | One-line description shown in the dashboard. |
 | `version` | string | no | `"0.0.0"` | Semantic version string. Shown in `sqb status` output. |

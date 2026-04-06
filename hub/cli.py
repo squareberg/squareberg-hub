@@ -27,7 +27,7 @@ else:
             "tomli is required on Python <3.11. Install it with: pip install tomli"
         ) from exc
 
-from .config import get_apps_dir, get_log_dir, get_socket_dir, load_config
+from .config import get_apps_dir, get_examples_dir, get_log_dir, get_socket_dir, load_config
 from .registry import Registry
 
 # ---------------------------------------------------------------------------
@@ -226,7 +226,7 @@ def _install_backend(app_dir: Path) -> None:
     uv = _uv()
     venv_dir = app_dir / ".venv"
     console.print(f"  [dim]Creating venv:[/dim] {venv_dir}")
-    _run_cmd([uv, "venv", str(venv_dir)], label="uv venv")
+    _run_cmd([uv, "venv", "--allow-existing", str(venv_dir)], label="uv venv")
     backend_dir = app_dir / "backend"
     if backend_dir.is_dir():
         _run_cmd(
@@ -545,7 +545,7 @@ def frontend_list(
 
     # Also check examples directory
     if not app_dir.is_dir():
-        examples_dir = get_apps_dir().parent / "examples" / app_name
+        examples_dir = get_examples_dir() / app_name
         if examples_dir.is_dir():
             app_dir = examples_dir
         else:
@@ -594,7 +594,7 @@ def frontend_switch(
     app_dir = get_apps_dir() / app_name
 
     if not app_dir.is_dir():
-        examples_dir = get_apps_dir().parent / "examples" / app_name
+        examples_dir = get_examples_dir() / app_name
         if examples_dir.is_dir():
             app_dir = examples_dir
         else:

@@ -4,7 +4,7 @@
 
 Squareberg is a local application hub that aggregates personal productivity tools ("apps") behind a unified API gateway. Each app is a standalone FastAPI backend with its own virtual environment, communicating with the hub over Unix domain sockets. Frontends are decoupled from backends: each app ships its own client-side SPA(s), and the hub provides a dashboard launcher plus a generic OpenAPI introspection layer.
 
-Each app is developed and distributed as an independent repository. The hub's `apps/` directory is a runtime-only location (gitignored) where apps are installed via the CLI.
+Each app is developed and distributed as an independent repository. Installed apps live under `$XDG_DATA_HOME/squareberg/apps/` (defaults to `~/.local/share/squareberg/apps/`), keeping runtime data out of the source tree.
 
 The project targets macOS as the primary platform, with Linux support (select distros) planned as a secondary goal. Windows is explicitly out of scope.
 
@@ -354,9 +354,9 @@ sqb stop                             # stop everything
 sqb status                           # hub and app status summary
 
 # App management
-sqb app add <github-url-or-path>     # clone/copy into apps/, create venv, install deps, build frontend
+sqb app add <github-url-or-path>     # clone/copy into data dir, create venv, install deps, build frontend
 sqb app add <url> --as my-papers     # install with custom folder name to avoid collisions
-sqb app remove <name>                # stop app, remove from apps/
+sqb app remove <name>                # stop app, remove from data dir
 sqb app list                         # list installed apps
 sqb app start <name>                 # start a specific app
 sqb app stop <name>                  # stop a specific app
@@ -372,10 +372,10 @@ sqb frontend switch <app> <name>     # activate a different frontend, rebuild
 
 When `sqb app add` is invoked:
 
-1. **Acquire source**: clone the Git repository or copy the local directory into `apps/{name}/` (or `apps/{custom-name}/` if `--as` is used).
+1. **Acquire source**: clone the Git repository or copy the local directory into the apps data directory (`$XDG_DATA_HOME/squareberg/apps/{name}/`, or `.../{custom-name}/` if `--as` is used).
 2. **Validate manifest**: read `.squareberg/manifest.toml`, verify required fields.
-3. **Create virtual environment**: `uv venv apps/{name}/.venv` within the app directory.
-4. **Install Python dependencies**: `uv pip install -e apps/{name}/backend/` (using the app's venv Python).
+3. **Create virtual environment**: `uv venv {app_dir}/.venv` within the app directory.
+4. **Install Python dependencies**: `uv pip install -e {app_dir}/backend/` (using the app's venv Python).
 5. **Build active frontend(s)**: `cd frontend/{active_frontend} && npm install && npm run build` for each active frontend.
 6. **Register in hub**: add the app to the hub's internal registry so it appears in the dashboard and can be started.
 
@@ -412,8 +412,10 @@ squareberg/                      # hub repository
 │               ├── src/
 │               ├── package.json
 │               └── vite.config.js
-├── apps/                        # installed apps at runtime (gitignored)
-├── sockets/                     # Unix socket files, dev fallback (gitignored)
+# Runtime data lives under $XDG_DATA_HOME/squareberg/:
+#   apps/       — installed apps
+#   sockets/    — Unix socket files
+#   logs/       — per-app log files
 ├── .gitignore
 └── README.md
 ```

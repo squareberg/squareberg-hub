@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API Explorer — Squareberg</title>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Tokens                                                               */
+    /* ------------------------------------------------------------------ */
+    :root {
+      --bg:          #0d1117;
+      --bg-sidebar:  #161b22;
+      --bg-hover:    #1c2128;
+      --bg-selected: #1c2128;
+      --bg-card:     #161b22;
+      --bg-code:     #0d1117;
+
+      --border:      #30363d;
+      --border-dim:  #21262d;
+
+      --text:        #e6edf3;
+      --text-muted:  #8b949e;
+      --text-dim:    #6e7681;
+
+      --accent:      #388bfd;
+
+      --method-get:     #388bfd;
+      --method-post:    #3fb950;
+      --method-put:     #d29922;
+      --method-delete:  #f85149;
+      --method-patch:   #bc8cff;
+      --method-other:   #8b949e;
+
+      --radius: 6px;
+      --sidebar-w: 280px;
+      --header-h: 52px;
+      --font-mono: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Reset / base                                                         */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code, pre {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Header                                                               */
+    /* ------------------------------------------------------------------ */
+    #header {
+      height: var(--header-h);
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    #header a.back {
+      color: var(--text-muted);
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+    #header a.back:hover { opacity: 1; text-decoration: none; }
+
+    #header .divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+
+    #header .app-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    #header .app-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    #header .spacer { flex: 1; }
+
+    #header .version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    #header .spec-link {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #header .spec-link:hover {
+      color: var(--text);
+      border-color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Body: sidebar + main                                                 */
+    /* ------------------------------------------------------------------ */
+    #body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Sidebar                                                              */
+    /* ------------------------------------------------------------------ */
+    #sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #search-wrap {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-dim);
+      flex-shrink: 0;
+    }
+
+    #search {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #search::placeholder { color: var(--text-dim); }
+    #search:focus { border-color: var(--accent); }
+
+    #endpoint-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    #endpoint-list::-webkit-scrollbar { width: 4px; }
+    #endpoint-list::-webkit-scrollbar-track { background: transparent; }
+    #endpoint-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .tag-group { margin-top: 4px; }
+
+    .tag-label {
+      padding: 6px 14px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+
+    .endpoint-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.1s;
+    }
+    .endpoint-item:hover { background: var(--bg-hover); }
+    .endpoint-item.active {
+      background: var(--bg-selected);
+      border-left-color: var(--accent);
+    }
+
+    .method-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 2px 5px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      min-width: 46px;
+      text-align: center;
+    }
+
+    .endpoint-path {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .endpoint-item.active .endpoint-path { color: var(--text); }
+
+    /* ------------------------------------------------------------------ */
+    /* Main panel                                                           */
+    /* ------------------------------------------------------------------ */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 40px;
+    }
+
+    #main::-webkit-scrollbar { width: 4px; }
+    #main::-webkit-scrollbar-track { background: transparent; }
+    #main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ---- empty / error states ---- */
+    .state-msg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    .state-msg .icon { font-size: 36px; opacity: 0.4; }
+    .state-msg .title { font-size: 16px; font-weight: 500; color: var(--text); }
+    .state-msg .body  { font-size: 13px; max-width: 340px; text-align: center; line-height: 1.6; }
+
+    /* ---- endpoint detail ---- */
+    .ep-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .ep-header .method-badge { font-size: 12px; padding: 4px 8px; margin-top: 4px; }
+
+    .ep-path {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .ep-summary {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .ep-description {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      max-width: 720px;
+    }
+
+    /* ---- sections ---- */
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-dim);
+    }
+
+    /* ---- parameters table ---- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 6px 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border-dim); }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 9px 12px;
+      vertical-align: top;
+    }
+
+    .param-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .param-in {
+      font-size: 11px;
+      color: var(--text-dim);
+      background: var(--bg-hover);
+      border: 1px solid var(--border-dim);
+      padding: 1px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .param-type {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #bc8cff;
+    }
+
+    .badge-required {
+      font-size: 10px;
+      font-weight: 600;
+      color: #f85149;
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .badge-optional {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .param-desc { color: var(--text-muted); }
+
+    /* ---- response cards ---- */
+    .response-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .response-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .response-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .status-2xx { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+    .status-4xx { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+    .status-5xx { background: rgba(210,153,34,0.15); color: #d29922; border: 1px solid rgba(210,153,34,0.3); }
+    .status-other { background: var(--bg-hover); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .response-desc { color: var(--text-muted); font-size: 13px; }
+
+    .response-schema {
+      padding: 10px 14px;
+      background: var(--bg-code);
+      border-top: 1px solid var(--border-dim);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ---- request body ---- */
+    .body-schema {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ---- operation id ---- */
+    .op-meta {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .op-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .op-meta-item code {
+      color: var(--text-muted);
+      background: var(--bg-hover);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <a class="back" href="/" title="Back to hub">&#8592;</a>
+  <div class="divider"></div>
+  <span class="app-name" id="h-name">API Explorer</span>
+  <span class="app-desc" id="h-desc"></span>
+  <div class="spacer"></div>
+  <span class="version" id="h-version" style="display:none"></span>
+  <a class="spec-link" id="h-spec" href="#" target="_blank" rel="noopener">JSON spec</a>
+</div>
+
+<div id="body">
+  <nav id="sidebar">
+    <div id="search-wrap">
+      <input id="search" type="text" placeholder="Filter endpoints…" autocomplete="off" />
+    </div>
+    <div id="endpoint-list"></div>
+  </nav>
+
+  <main id="main">
+    <div class="state-msg" id="state-loading">
+      <div class="icon">⏳</div>
+      <div class="title">Loading spec…</div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  /* ------------------------------------------------------------------ */
+  /* Utilities                                                            */
+  /* ------------------------------------------------------------------ */
+  const METHOD_COLOR = {
+    get:    'var(--method-get)',
+    post:   'var(--method-post)',
+    put:    'var(--method-put)',
+    delete: 'var(--method-delete)',
+    patch:  'var(--method-patch)',
+  };
+
+  function methodColor(m) {
+    return METHOD_COLOR[m.toLowerCase()] || 'var(--method-other)';
+  }
+
+  function methodBadge(m, large) {
+    const size = large ? 'font-size:12px;padding:4px 8px;margin-top:4px;' : '';
+    return `<span class="method-badge" style="background:${methodColor(m)}1a;color:${methodColor(m)};border:1px solid ${methodColor(m)}4d;${size}">${m.toUpperCase()}</span>`;
+  }
+
+  function statusBadgeClass(code) {
+    const c = String(code);
+    if (c.startsWith('2')) return 'status-2xx';
+    if (c.startsWith('4')) return 'status-4xx';
+    if (c.startsWith('5')) return 'status-5xx';
+    return 'status-other';
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function schemaToString(schema, indent) {
+    if (!schema) return 'any';
+    if (schema.$ref) return schema.$ref.split('/').pop();
+    if (schema.type === 'array') return `array<${schemaToString(schema.items, indent)}>`;
+    if (schema.type === 'object' || schema.properties) {
+      const props = schema.properties || {};
+      const required = schema.required || [];
+      const lines = Object.entries(props).map(([k, v]) => {
+        const req = required.includes(k) ? '' : '?';
+        return `${indent}  ${k}${req}: ${schemaToString(v, indent + '  ')}`;
+      });
+      return lines.length ? `{\n${lines.join('\n')}\n${indent}}` : '{}';
+    }
+    if (schema.allOf) return schema.allOf.map(s => schemaToString(s, indent)).join(' & ');
+    if (schema.anyOf) return schema.anyOf.map(s => schemaToString(s, indent)).join(' | ');
+    if (schema.oneOf) return schema.oneOf.map(s => schemaToString(s, indent)).join(' | ');
+    return schema.type || 'any';
+  }
+
+  function resolveRef(spec, ref) {
+    if (!ref || !ref.startsWith('#/')) return null;
+    const parts = ref.slice(2).split('/');
+    let obj = spec;
+    for (const p of parts) { obj = obj?.[p]; }
+    return obj ?? null;
+  }
+
+  function resolveSchema(spec, schema) {
+    if (!schema) return schema;
+    if (schema.$ref) return resolveRef(spec, schema.$ref) ?? schema;
+    return schema;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* App name from URL: /registry/<name>/view                             */
+  /* ------------------------------------------------------------------ */
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  const APP_NAME = parts[1] || 'unknown';
+  const SPEC_URL = `/registry/${APP_NAME}/spec`;
+
+  document.title = `${APP_NAME} — API Explorer`;
+  document.getElementById('h-name').textContent = APP_NAME;
+  document.getElementById('h-spec').href = SPEC_URL;
+
+  /* ------------------------------------------------------------------ */
+  /* State                                                                */
+  /* ------------------------------------------------------------------ */
+  let spec = null;
+  let endpoints = [];   // [{method, path, op, tags}]
+  let activeIdx = -1;
+
+  /* ------------------------------------------------------------------ */
+  /* Render sidebar                                                       */
+  /* ------------------------------------------------------------------ */
+  function buildEndpoints() {
+    endpoints = [];
+    const paths = spec.paths || {};
+    const HTTP_METHODS = ['get','post','put','patch','delete','head','options'];
+    for (const [path, pathItem] of Object.entries(paths)) {
+      for (const method of HTTP_METHODS) {
+        if (pathItem[method]) {
+          endpoints.push({ method, path, op: pathItem[method] });
+        }
+      }
+    }
+  }
+
+  function renderSidebar(filter) {
+    const list = document.getElementById('endpoint-list');
+    const q = (filter || '').toLowerCase();
+
+    const visible = q
+      ? endpoints.filter(e => e.path.toLowerCase().includes(q) || e.method.toLowerCase().includes(q) || (e.op.summary || '').toLowerCase().includes(q))
+      : endpoints;
+
+    // Group by first tag or 'default'
+    const groups = {};
+    for (const e of visible) {
+      const tag = (e.op.tags && e.op.tags[0]) || 'endpoints';
+      if (!groups[tag]) groups[tag] = [];
+      groups[tag].push(e);
+    }
+
+    let html = '';
+    const showTag = Object.keys(groups).length > 1 || !groups['endpoints'];
+    for (const [tag, items] of Object.entries(groups)) {
+      if (showTag) html += `<div class="tag-label">${esc(tag)}</div>`;
+      html += '<div class="tag-group">';
+      for (const e of items) {
+        const idx = endpoints.indexOf(e);
+        const active = idx === activeIdx ? ' active' : '';
+        html += `<div class="endpoint-item${active}" data-idx="${idx}">
+          ${methodBadge(e.method, false)}
+          <span class="endpoint-path" title="${esc(e.path)}">${esc(e.path)}</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+
+    if (!html) html = `<div style="padding:16px;color:var(--text-dim);font-size:13px;">No matching endpoints.</div>`;
+    list.innerHTML = html;
+
+    list.querySelectorAll('.endpoint-item').forEach(el => {
+      el.addEventListener('click', () => selectEndpoint(parseInt(el.dataset.idx)));
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Render main panel                                                    */
+  /* ------------------------------------------------------------------ */
+  function selectEndpoint(idx) {
+    activeIdx = idx;
+    renderSidebar(document.getElementById('search').value);
+    renderDetail(endpoints[idx]);
+  }
+
+  function renderDetail(e) {
+    const main = document.getElementById('main');
+    const op = e.op;
+    const allParams = [...(spec.paths[e.path].parameters || []), ...(op.parameters || [])];
+
+    let html = `
+      <div class="ep-header">
+        ${methodBadge(e.method, true)}
+        <div>
+          ${op.summary ? `<div class="ep-summary">${esc(op.summary)}</div>` : ''}
+          <div class="ep-path">${esc(e.path)}</div>
+        </div>
+      </div>`;
+
+    // Meta row
+    const meta = [];
+    if (op.operationId) meta.push(`<div class="op-meta-item">ID <code>${esc(op.operationId)}</code></div>`);
+    if (op.tags?.length) meta.push(`<div class="op-meta-item">Tags <code>${op.tags.map(esc).join(', ')}</code></div>`);
+    if (op.deprecated) meta.push(`<div class="op-meta-item" style="color:#d29922">⚠ Deprecated</div>`);
+    if (meta.length) html += `<div class="op-meta">${meta.join('')}</div>`;
+
+    if (op.description) {
+      html += `<div class="ep-description">${esc(op.description)}</div>`;
+    }
+
+    // Parameters
+    if (allParams.length) {
+      html += `<div class="section">
+        <div class="section-title">Parameters</div>
+        <table>
+          <thead><tr>
+            <th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th>
+          </tr></thead><tbody>`;
+      for (const p of allParams) {
+        const resolved = resolveSchema(spec, p.schema);
+        const typeStr = schemaToString(resolved, '');
+        const reqBadge = p.required
+          ? '<span class="badge-required">required</span>'
+          : '<span class="badge-optional">optional</span>';
+        html += `<tr>
+          <td><span class="param-name">${esc(p.name)}</span></td>
+          <td><span class="param-in">${esc(p.in)}</span></td>
+          <td><span class="param-type">${esc(typeStr)}</span></td>
+          <td>${reqBadge}</td>
+          <td class="param-desc">${esc(p.description || '')}</td>
+        </tr>`;
+      }
+      html += '</tbody></table></div>';
+    }
+
+    // Request body
+    if (op.requestBody) {
+      const content = op.requestBody.content || {};
+      const mediaType = Object.keys(content)[0] || '';
+      const bodySchema = resolveSchema(spec, content[mediaType]?.schema);
+      html += `<div class="section">
+        <div class="section-title">Request Body${op.requestBody.required ? ' <span class="badge-required" style="font-size:10px">required</span>' : ''}</div>
+        ${mediaType ? `<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">${esc(mediaType)}</div>` : ''}
+        <pre class="body-schema">${esc(schemaToString(bodySchema, ''))}</pre>
+      </div>`;
+    }
+
+    // Responses
+    const responses = op.responses || {};
+    if (Object.keys(responses).length) {
+      html += `<div class="section"><div class="section-title">Responses</div><div class="response-list">`;
+      for (const [code, resp] of Object.entries(responses)) {
+        const badgeClass = statusBadgeClass(code);
+        const content = resp.content || {};
+        const mediaType = Object.keys(content)[0];
+        const schema = mediaType ? resolveSchema(spec, content[mediaType]?.schema) : null;
+        const schemaStr = schema ? schemaToString(schema, '') : null;
+
+        html += `<div class="response-card">
+          <div class="response-card-header">
+            <span class="status-badge ${badgeClass}">${esc(code)}</span>
+            <span class="response-desc">${esc(resp.description || '')}</span>
+          </div>`;
+        if (schemaStr) {
+          html += `<pre class="response-schema">${esc(mediaType ? mediaType + '\n\n' : '') + esc(schemaStr)}</pre>`;
+        }
+        html += `</div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    main.innerHTML = html;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Fetch spec and boot                                                  */
+  /* ------------------------------------------------------------------ */
+  function showState(icon, title, body) {
+    document.getElementById('main').innerHTML =
+      `<div class="state-msg"><div class="icon">${icon}</div><div class="title">${title}</div><div class="body">${body}</div></div>`;
+  }
+
+  fetch(SPEC_URL)
+    .then(r => {
+      if (r.status === 503) throw new Error('not_running');
+      if (!r.ok) throw new Error('fetch_failed');
+      return r.json();
+    })
+    .then(data => {
+      spec = data;
+
+      // Header
+      const info = spec.info || {};
+      document.title = `${info.title || APP_NAME} — API Explorer`;
+      document.getElementById('h-name').textContent = info.title || APP_NAME;
+      if (info.description) document.getElementById('h-desc').textContent = info.description;
+      if (info.version) {
+        const el = document.getElementById('h-version');
+        el.textContent = `v${info.version}`;
+        el.style.display = '';
+      }
+
+      buildEndpoints();
+
+      if (!endpoints.length) {
+        showState('📭', 'No endpoints', 'This app has no documented API paths.');
+        return;
+      }
+
+      renderSidebar('');
+      selectEndpoint(0);
+    })
+    .catch(err => {
+      if (err.message === 'not_running') {
+        showState('⏸',
+          'App not running',
+          `<strong>${esc(APP_NAME)}</strong> must be running to view its API. ` +
+          `Start it from the <a href="/">hub dashboard</a> or with <code>sqb app start ${esc(APP_NAME)}</code>.`
+        );
+      } else {
+        showState('⚠', 'Failed to load spec', 'Could not fetch the OpenAPI spec. Check the browser console for details.');
+        console.error('Explorer error:', err);
+      }
+    });
+
+  /* ------------------------------------------------------------------ */
+  /* Search filter                                                        */
+  /* ------------------------------------------------------------------ */
+  document.getElementById('search').addEventListener('input', function () {
+    renderSidebar(this.value);
+  });
+
+})();
+</script>
+</body>
+</html>

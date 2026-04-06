@@ -120,7 +120,12 @@ def get_log_dir(config: HubConfig | None = None) -> Path:
 
 
 def get_apps_dir() -> Path:
-    """Return the apps/ directory under the project root, creating it if needed."""
-    apps_dir = _project_root() / "apps"
+    """Return the apps directory under XDG_DATA_HOME, creating it if needed."""
+    apps_dir = _xdg_data_home() / "squareberg" / "apps"
     apps_dir.mkdir(parents=True, exist_ok=True)
     return apps_dir
+
+
+def get_examples_dir() -> Path:
+    """Return the in-tree examples/ directory (sibling of hub/)."""
+    return _hub_root().parent / "examples"

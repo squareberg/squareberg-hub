@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
+import mimetypes
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 from .config import HubConfig, get_apps_dir, get_log_dir, get_socket_dir, load_config
 from .manager import ProcessManager
@@ -17,12 +17,19 @@ from .registry import Registry
 
 logger = logging.getLogger("squareberg.hub")
 
+# Ensure common web MIME types are registered
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
+
 # ---------------------------------------------------------------------------
 # Shared state (populated during lifespan)
 # ---------------------------------------------------------------------------
 _config: HubConfig
 _registry: Registry
 _manager: ProcessManager
+
+# Resolved once at startup; None means dashboard has not been built.
+_dashboard_dist: Path | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +38,7 @@ _manager: ProcessManager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _config, _registry, _manager
+    global _config, _registry, _manager, _dashboard_dist
 
     # --- Startup ---
     _config = load_config()
@@ -54,11 +61,12 @@ async def lifespan(app: FastAPI):
         log_dir=log_dir,
     )
 
-    # Mount per-app static frontends (must happen before the catch-all proxy).
-    _mount_app_frontends(app, _registry)
-
-    # Mount the hub dashboard.
-    _mount_dashboard(app)
+    dist = Path(__file__).resolve().parent / "dashboard" / "dist"
+    if dist.is_dir():
+        _dashboard_dist = dist
+        logger.info("Dashboard found at %s", dist)
+    else:
+        logger.warning("No built dashboard at %s — serving placeholder", dist)
 
     logger.info(
         "Squareberg Hub starting on %s:%d — %d app(s) registered.",
@@ -93,6 +101,14 @@ async def list_apps():
     return [info.to_dict() for info in _registry.list()]
 
 
+@app.post("/registry/scan")
+async def rescan_registry():
+    """Re-scan the apps directory and update the in-memory registry."""
+    _registry.scan()
+    names = [info.name for info in _registry.list()]
+    return {"status": "ok", "apps": names}
+
+
 @app.get("/registry/{name}")
 async def get_app(name: str):
     """Get metadata for a single app."""
@@ -100,6 +116,15 @@ async def get_app(name: str):
     if info is None:
         raise HTTPException(status_code=404, detail=f"App '{name}' not found.")
     return info.to_dict()
+
+
+@app.get("/registry/{name}/view", response_class=HTMLResponse)
+async def view_app_api(name: str):
+    """Serve the interactive API explorer for an app."""
+    if _registry.get(name) is None:
+        raise HTTPException(status_code=404, detail=f"App '{name}' not found.")
+    explorer = Path(__file__).resolve().parent / "explorer.html"
+    return HTMLResponse(content=explorer.read_text())
 
 
 @app.get("/registry/{name}/spec")
@@ -156,8 +181,16 @@ async def stop_app(name: str):
     return {"status": "ok", "app": name, "message": f"App '{name}' stopped."}
 
 
+@app.delete("/registry/{name}")
+async def remove_app(name: str):
+    """Remove an app from the in-memory registry."""
+    if not _registry.remove(name):
+        raise HTTPException(status_code=404, detail=f"App '{name}' not found.")
+    return {"status": "ok", "app": name, "message": f"App '{name}' removed from registry."}
+
+
 # ---------------------------------------------------------------------------
-# Reverse proxy catch-all: /apps/{name}/api/{path}
+# Reverse proxy: /apps/{name}/api/{path}
 # ---------------------------------------------------------------------------
 
 @app.api_route(
@@ -217,8 +250,58 @@ async def proxy_to_app(name: str, path: str, request: Request):
 
 
 # ---------------------------------------------------------------------------
-# Static file mounting helpers
+# Dynamic static-file serving (no StaticFiles mounts)
 # ---------------------------------------------------------------------------
+
+def _serve_static_file(base_dir: Path, file_path: str) -> Response:
+    """Resolve *file_path* within *base_dir* and return a Response.
+
+    Serves ``index.html`` for directory requests (SPA fallback).
+    Raises 404 if the file does not exist.
+    """
+    # Normalise and prevent path traversal
+    resolved = (base_dir / file_path).resolve()
+    if not str(resolved).startswith(str(base_dir.resolve())):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # SPA fallback: serve index.html for directories or missing files
+    if resolved.is_dir():
+        resolved = resolved / "index.html"
+    if not resolved.is_file():
+        # SPA fallback: if the exact file doesn't exist, serve index.html
+        index = base_dir / "index.html"
+        if index.is_file():
+            resolved = index
+        else:
+            raise HTTPException(status_code=404, detail="Not found")
+
+    content_type, _ = mimetypes.guess_type(resolved.name)
+    return Response(
+        content=resolved.read_bytes(),
+        media_type=content_type or "application/octet-stream",
+    )
+
+
+@app.get("/apps/{name}/{path:path}")
+async def serve_app_frontend(name: str, path: str):
+    """Serve an app's frontend assets dynamically from the registry."""
+    info = _registry.get(name)
+    if info is None:
+        raise HTTPException(status_code=404, detail=f"App '{name}' not found.")
+    if not info.frontend_dist_path:
+        raise HTTPException(
+            status_code=404, detail=f"App '{name}' has no frontend.",
+        )
+
+    dist_dir = Path(info.frontend_dist_path)
+    if not dist_dir.is_dir():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Frontend for '{name}' has not been built.",
+        )
+
+    return _serve_static_file(dist_dir, path)
+
 
 _DASHBOARD_PLACEHOLDER = """\
 <!DOCTYPE html>
@@ -260,35 +343,9 @@ _DASHBOARD_PLACEHOLDER = """\
 """
 
 
-def _mount_app_frontends(fastapi_app: FastAPI, registry: Registry) -> None:
-    """Mount static-file directories for each app that has a built frontend."""
-    for info in registry.list():
-        if info.frontend_dist_path and Path(info.frontend_dist_path).is_dir():
-            mount_path = f"/apps/{info.name}"
-            fastapi_app.mount(
-                mount_path,
-                StaticFiles(directory=info.frontend_dist_path, html=True),
-                name=f"frontend-{info.name}",
-            )
-            logger.info(
-                "Mounted frontend for '%s' at %s → %s",
-                info.name, mount_path, info.frontend_dist_path,
-            )
-
-
-def _mount_dashboard(fastapi_app: FastAPI) -> None:
-    """Mount the hub dashboard — built SPA if available, else a placeholder."""
-    dashboard_dist = Path(__file__).resolve().parent / "dashboard" / "dist"
-
-    if dashboard_dist.is_dir():
-        fastapi_app.mount(
-            "/",
-            StaticFiles(directory=str(dashboard_dist), html=True),
-            name="dashboard",
-        )
-        logger.info("Mounted dashboard from %s", dashboard_dist)
-    else:
-        # Serve an inline placeholder page.
-        @fastapi_app.get("/", response_class=HTMLResponse)
-        async def dashboard_placeholder():
-            return _DASHBOARD_PLACEHOLDER
+@app.get("/{path:path}")
+async def serve_dashboard(path: str):
+    """Serve the hub dashboard, or the placeholder if it hasn't been built."""
+    if _dashboard_dist is not None:
+        return _serve_static_file(_dashboard_dist, path)
+    return HTMLResponse(content=_DASHBOARD_PLACEHOLDER)

@@ -70,7 +70,8 @@ class Registry:
             self._scan_directory(self._apps_dir)
 
         # Scan in-tree examples/ directory (sibling of hub/)
-        examples_dir = self._apps_dir.parent / "examples"
+        from .config import get_examples_dir
+        examples_dir = get_examples_dir()
         if examples_dir.is_dir():
             self._scan_directory(examples_dir)
 

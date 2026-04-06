@@ -27,8 +27,8 @@ HTTP 200 — array of app objects.
     "version": "0.1.0",
     "status": "running",
     "socket_path": "/home/user/.local/share/squareberg/sockets/hello.sock",
-    "frontend_dist_path": "/home/user/Code/squareberg/apps/hello/frontend/default/dist",
-    "manifest_path": "/home/user/Code/squareberg/apps/hello/.squareberg/manifest.toml",
+    "frontend_dist_path": "/home/user/.local/share/squareberg/apps/hello/frontend/default/dist",
+    "manifest_path": "/home/user/.local/share/squareberg/apps/hello/.squareberg/manifest.toml",
     "backend_module": "app:app"
   }
 ]
@@ -66,8 +66,8 @@ HTTP 200 — single app object (same schema as the items in `GET /registry`).
   "version": "0.1.0",
   "status": "running",
   "socket_path": "/home/user/.local/share/squareberg/sockets/hello.sock",
-  "frontend_dist_path": "/home/user/Code/squareberg/apps/hello/frontend/default/dist",
-  "manifest_path": "/home/user/Code/squareberg/apps/hello/.squareberg/manifest.toml",
+  "frontend_dist_path": "/home/user/.local/share/squareberg/apps/hello/frontend/default/dist",
+  "manifest_path": "/home/user/.local/share/squareberg/apps/hello/.squareberg/manifest.toml",
   "backend_module": "app:app"
 }
 ```

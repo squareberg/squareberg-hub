@@ -100,7 +100,7 @@ The hub's own SPA served from `hub/dashboard/dist/`. Falls back to an inline pla
 
 On startup, the hub's `Registry` class scans two directories for apps:
 
-1. `apps/` — runtime-installed apps (gitignored)
+1. `$XDG_DATA_HOME/squareberg/apps/` — runtime-installed apps (defaults to `~/.local/share/squareberg/apps/`)
 2. `examples/` — in-tree example apps for development and testing
 
 Within each directory, every subdirectory containing a `.squareberg/manifest.toml` file is registered as an app. The manifest is parsed to extract the app name, display name, version, description, backend module, and active frontend path.

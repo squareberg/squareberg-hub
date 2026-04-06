@@ -48,10 +48,10 @@ When the hub starts, it scans each registered app's manifest for the first entry
 
 ```
 GET /apps/hello/
-  → serves apps/hello/frontend/default/dist/index.html
+  → serves {app_dir}/frontend/default/dist/index.html
 
 GET /apps/hello/assets/main.js
-  → serves apps/hello/frontend/default/dist/assets/main.js
+  → serves {app_dir}/frontend/default/dist/assets/main.js
 ```
 
 The mount uses FastAPI's `StaticFiles` with `html=True`, which enables SPA routing (any unmatched path returns `index.html` so the client-side router handles it).

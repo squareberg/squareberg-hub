@@ -83,8 +83,13 @@ squareberg/
 │   ├── dashboard/
 │   │   └── dist/     ← built dashboard (after npm run build)
 │   └── ...
-├── apps/             ← created automatically; installed apps live here
-└── sockets/          ← dev fallback for Unix socket files
+└── examples/         ← in-tree example apps
+
+# Runtime data (created automatically):
+# ~/.local/share/squareberg/
+#   ├── apps/         ← installed apps
+#   ├── sockets/      ← Unix socket files
+#   └── logs/         ← per-app log files
 ```
 
 !!! tip "Next step"

@@ -2,7 +2,7 @@
 
 Squareberg is a **local application hub** that aggregates personal productivity tools behind a unified API gateway. Each app is a standalone FastAPI backend running in its own virtual environment, communicating with the hub over Unix domain sockets. Frontends are decoupled from backends: every app ships its own client-side SPA, while the hub provides a dashboard launcher and a generic OpenAPI introspection layer.
 
-Apps are developed and distributed as independent repositories. The hub's `apps/` directory is a runtime-only location where apps are installed via the `sqb` CLI.
+Apps are developed and distributed as independent repositories. Installed apps live under `$XDG_DATA_HOME/squareberg/apps/` (defaults to `~/.local/share/squareberg/apps/`), keeping runtime data out of the source tree.
 
 ## Key Features
 

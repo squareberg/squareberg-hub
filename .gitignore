@@ -18,8 +18,6 @@ hub/dashboard/dist/
 .parcel-cache/
 
 # Squareberg runtime
-apps/
-sockets/
 scratch/
 
 # Docs build

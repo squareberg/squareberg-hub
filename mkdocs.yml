@@ -68,6 +68,7 @@ nav:
   - Guide:
     - CLI Reference: guide/cli.md
     - Writing Apps: guide/writing-apps.md
+    - API Metadata: guide/api-metadata.md
     - Running as a Service: guide/deployment.md
   - Reference:
     - manifest.toml: reference/manifest.md
