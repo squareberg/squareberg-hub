@@ -14,7 +14,7 @@ venv/
 # Node / frontend
 node_modules/
 frontend/*/dist/
-hub/dashboard/dist/
+!hub/dashboard/dist/
 .parcel-cache/
 
 # Squareberg runtime

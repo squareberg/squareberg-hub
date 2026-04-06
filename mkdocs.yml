@@ -1,8 +1,8 @@
 site_name: Squareberg
 site_description: A local application hub for personal productivity tools
-site_url: https://jhadida.github.io/squareberg/
-repo_url: https://github.com/jhadida/squareberg
-repo_name: squareberg
+site_url: https://squareberg.github.io/squareberg-hub/
+repo_url: https://github.com/squareberg/squareberg-hub
+repo_name: squareberg-hub
 docs_dir: docs
 theme:
   name: material
@@ -11,13 +11,13 @@ theme:
       primary: indigo
       accent: indigo
       toggle:
-        icon: material/brightness-7
+        icon: material/brightness-4
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
+      primary: black
       accent: indigo
       toggle:
-        icon: material/brightness-4
+        icon: material/brightness-7
         name: Switch to light mode
   features:
     - navigation.tabs
@@ -70,6 +70,7 @@ nav:
     - Writing Apps: guide/writing-apps.md
     - API Metadata: guide/api-metadata.md
     - Running as a Service: guide/deployment.md
+    - Contributing: guide/contributing.md
   - Reference:
     - manifest.toml: reference/manifest.md
     - Hub API: reference/hub-api.md

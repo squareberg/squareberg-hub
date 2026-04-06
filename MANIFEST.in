@@ -1,0 +1,14 @@
+include LICENSE
+include README.md
+include pyproject.toml
+
+recursive-include hub *.py *.toml *.html *.css *.js *.json
+
+# Exclude frontend source (only dist is needed)
+recursive-exclude hub/dashboard/src *
+recursive-exclude hub/dashboard/node_modules *
+prune hub/dashboard/node_modules
+exclude hub/dashboard/package.json
+exclude hub/dashboard/package-lock.json
+exclude hub/dashboard/vite.config.js
+exclude hub/dashboard/index.html

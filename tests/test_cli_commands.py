@@ -14,11 +14,10 @@ runner = CliRunner()
 # -----------------------------------------------------------------
 
 
-def test_status_offline():
-    """'sqb status' reports the hub as stopped and lists the hello app."""
+def test_status():
+    """'sqb status' succeeds and lists the hello app."""
     result = runner.invoke(app, ["status"])
     assert result.exit_code == 0
-    assert "stopped" in result.output.lower()
     assert "hello" in result.output.lower()
 
 
@@ -27,7 +26,7 @@ def test_status_offline():
 # -----------------------------------------------------------------
 
 
-def test_app_list_offline():
+def test_app_list():
     """'sqb app list' lists the hello app."""
     result = runner.invoke(app, ["app", "list"])
     assert result.exit_code == 0

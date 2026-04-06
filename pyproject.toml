@@ -3,6 +3,20 @@ name = "squareberg-hub"
 version = "0.1.0"
 description = "Squareberg — local application hub"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["hub", "api", "dashboard", "fastapi", "local"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
@@ -36,3 +50,27 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["hub"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"hub/dashboard/dist" = "hub/dashboard/dist"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "hub/",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.hatch.build.targets.sdist.force-include]
+"hub/dashboard/dist" = "hub/dashboard/dist"
+
+[tool.hatch.build]
+exclude = [
+    "hub/dashboard/src/",
+    "hub/dashboard/node_modules/",
+    "hub/dashboard/package.json",
+    "hub/dashboard/package-lock.json",
+    "hub/dashboard/vite.config.js",
+    "hub/dashboard/index.html",
+]
