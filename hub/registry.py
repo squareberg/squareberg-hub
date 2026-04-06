@@ -62,18 +62,11 @@ class Registry:
     # ------------------------------------------------------------------
 
     def scan(self) -> None:
-        """Scan apps_dir and the in-tree examples/ directory for apps."""
+        """Scan apps_dir for installed apps."""
         self._apps.clear()
 
-        # Scan the runtime apps/ directory
         if self._apps_dir.is_dir():
             self._scan_directory(self._apps_dir)
-
-        # Scan in-tree examples/ directory (sibling of hub/)
-        from .config import get_examples_dir
-        examples_dir = get_examples_dir()
-        if examples_dir.is_dir():
-            self._scan_directory(examples_dir)
 
         logger.info(
             "Registry scan complete: %d app(s) found — %s",
@@ -105,16 +98,22 @@ class Registry:
 
         name = app_section.get("name", app_dir.name)
 
-        # Resolve the active frontend dist path
+        # Resolve the active frontend directory.
+        # Prefer a ``dist/`` subfolder (build-based frontends), but fall
+        # back to the frontend root when it contains an ``index.html``
+        # directly (simple / pre-built frontends).
         frontend_dist: str | None = None
         active_frontends = frontend_section.get("active", [])
         if active_frontends:
             first_active = active_frontends[0]
             fe_config = frontend_section.get(first_active, {})
             fe_rel_path = fe_config.get("path", f"frontend/{first_active}")
-            dist_candidate = app_dir / fe_rel_path / "dist"
+            fe_dir = app_dir / fe_rel_path
+            dist_candidate = fe_dir / "dist"
             if dist_candidate.is_dir():
                 frontend_dist = str(dist_candidate)
+            elif (fe_dir / "index.html").is_file():
+                frontend_dist = str(fe_dir)
 
         socket_path = str(self._socket_dir / f"{name}.sock")
 
@@ -147,6 +146,14 @@ class Registry:
 
     def list(self) -> list[AppInfo]:
         return list(self._apps.values())
+
+    def remove(self, name: str) -> bool:
+        """Remove an app from the registry. Returns True if it was present."""
+        if name in self._apps:
+            del self._apps[name]
+            logger.info("Unregistered app: %s", name)
+            return True
+        return False
 
     def set_status(self, name: str, status: str) -> None:
         if name in self._apps:

@@ -109,11 +109,11 @@ def _api_get(path: str) -> dict | list:
         raise typer.Exit(1)
 
 
-def _api_post(path: str) -> dict:
-    """POST to the hub API. Raises typer.Exit on failure."""
+def _api_request(method: str, path: str) -> dict:
+    """Make a request to the hub API. Raises typer.Exit on failure."""
     import httpx
     try:
-        resp = httpx.post(f"{_HUB_URL}{path}", timeout=15.0)
+        resp = httpx.request(method, f"{_HUB_URL}{path}", timeout=15.0)
         resp.raise_for_status()
         return resp.json()
     except httpx.ConnectError:
@@ -127,6 +127,14 @@ def _api_post(path: str) -> dict:
             detail = exc.response.text
         console.print(f"[red]API error ({exc.response.status_code}):[/red] {detail}")
         raise typer.Exit(1)
+
+
+def _api_post(path: str) -> dict:
+    return _api_request("POST", path)
+
+
+def _api_delete(path: str) -> dict:
+    return _api_request("DELETE", path)
 
 
 def _read_manifest(app_dir: Path) -> dict:
@@ -425,6 +433,13 @@ def app_add(
     # Step 4: Build active frontends
     _build_active_frontends(final_dir, manifest)
 
+    # Notify the running hub so it picks up the new app immediately.
+    if _hub_is_running():
+        try:
+            _api_post("/registry/scan")
+        except SystemExit:
+            pass
+
     console.print(f"[green]App '{app_name}' installed successfully.[/green]")
 
 
@@ -447,6 +462,14 @@ def app_remove(
         raise typer.Exit(1)
 
     shutil.rmtree(app_dir)
+
+    # Remove from the hub's in-memory registry if it is running.
+    if _hub_is_running():
+        try:
+            _api_delete(f"/registry/{name}")
+        except SystemExit:
+            pass  # hub may not know about this app; that is fine
+
     console.print(f"[green]Removed app '{name}'.[/green]")
 
 
