@@ -1,6 +1,6 @@
 [project]
 name = "squareberg-hub"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Squareberg — local application hub"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -58,6 +58,9 @@ include = [
     "README.md",
     "LICENSE",
 ]
+
+[tool.hatch.version]
+path = "hub/__init__.py"
 
 [tool.hatch.build]
 exclude = [

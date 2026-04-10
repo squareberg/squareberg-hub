@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from . import __version__
 from .config import HubConfig, get_apps_dir, get_log_dir, get_socket_dir, load_config
 from .manager import ProcessManager
 from .proxy import proxy_request
@@ -86,7 +87,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Squareberg Hub",
-    version="0.1.0",
+    version=__version__,
     lifespan=lifespan,
 )
 
