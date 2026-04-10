@@ -21,12 +21,12 @@ A local application hub that aggregates personal productivity tools behind a uni
 ## Quick start
 
 ```bash
-git clone https://github.com/jhadida/squareberg
-cd squareberg
-uv venv && uv pip install -e .
+git clone https://github.com/squareberg/squareberg-hub.git
+cd squareberg-hub
+uv venv --prompt sqb --python 3.12
 
 # Build the dashboard
-cd hub/dashboard && npm install && npm run build && cd ../..
+./build-hub.sh 
 
 # Start the hub (port 9100)
 sqb start
@@ -53,11 +53,10 @@ sqb frontend list / switch <app> <frontend>
 
 ## Documentation
 
-Full docs at [jhadida.github.io/squareberg](https://jhadida.github.io/squareberg) — or build locally:
+Full docs at [squareberg.github.io/squareberg-hub](https://squareberg.github.io/squareberg-hub) — or build locally:
 
 ```bash
-uv pip install -e ".[docs]"
-mkdocs serve
+./serve-docs.sh
 ```
 
 ## Project layout

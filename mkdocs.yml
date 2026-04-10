@@ -7,18 +7,18 @@ docs_dir: docs
 theme:
   name: material
   palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to dark mode
     - scheme: slate
       primary: black
       accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
   features:
     - navigation.tabs
     - navigation.sections
@@ -57,14 +57,15 @@ plugins:
             show_root_heading: true
 
 nav:
-  - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - Hello World: getting-started/hello-world.md
-  - Concepts:
-    - Architecture: concepts/architecture.md
-    - Apps: concepts/apps.md
-    - Frontends: concepts/frontends.md
+  - Documentation: 
+    - Home: index.md
+    - Getting Started:
+      - Installation: getting-started/installation.md
+      - Hello World: getting-started/hello-world.md
+    - Concepts:
+      - Architecture: concepts/architecture.md
+      - Apps: concepts/apps.md
+      - Frontends: concepts/frontends.md
   - Guide:
     - CLI Reference: guide/cli.md
     - Writing Apps: guide/writing-apps.md

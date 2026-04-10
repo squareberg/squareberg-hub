@@ -7,7 +7,8 @@ This page covers everything you need to develop, test, and release Squareberg.
 ```bash
 git clone https://github.com/squareberg/squareberg-hub
 cd squareberg-hub
-uv venv && uv pip install -e ".[dev,docs]"
+uv venv --prompt sqb --python 3.12
+uv pip install -e ".[docs,dev]"
 ```
 
 Verify the installation:
@@ -24,10 +25,10 @@ sqb --help
 
 The hub dashboard is a Preact + daisyUI + Tailwind SPA located under `hub/dashboard/`.
 
-To rebuild it:
+To rebuild it use the bash script at the root of the repo:
 
 ```bash
-cd hub/dashboard && npm install && npm run build
+./build-hub.sh
 ```
 
 The built `hub/dashboard/dist/` directory is committed to the repo so the Python package works without requiring Node.js at install time.
@@ -90,10 +91,10 @@ python -c "import zipfile; z = zipfile.ZipFile('dist/squareberg_hub-*.whl'); pri
 
 ## Documentation
 
-Docs are built with mkdocs-material. To preview locally:
+Docs are built with mkdocs-material. To preview locally use the bash script at the root of the repo:
 
 ```bash
-mkdocs serve
+./serve-docs.sh
 ```
 
 Build with strict mode to catch broken links:

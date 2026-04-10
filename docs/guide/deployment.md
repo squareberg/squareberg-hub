@@ -18,12 +18,12 @@ macOS uses `launchd` for user-space service management. Create a plist file at `
   <key>ProgramArguments</key>
   <array>
     <!-- Adjust this path to match your squareberg venv -->
-    <string>/Users/YOUR_USERNAME/Code/squareberg/.venv/bin/sqb</string>
+    <string>/Users/YOUR_USERNAME/Code/squareberg-hub/.venv/bin/sqb</string>
     <string>start</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/YOUR_USERNAME/Code/squareberg</string>
+  <string>/Users/YOUR_USERNAME/Code/squareberg-hub</string>
 
   <key>RunAtLoad</key>
   <true/>
@@ -85,8 +85,8 @@ After=network.target
 [Service]
 Type=simple
 # Adjust the paths below to match your installation
-ExecStart=/home/YOUR_USERNAME/Code/squareberg/.venv/bin/sqb start
-WorkingDirectory=/home/YOUR_USERNAME/Code/squareberg
+ExecStart=/home/YOUR_USERNAME/Code/squareberg-hub/.venv/bin/sqb start
+WorkingDirectory=/home/YOUR_USERNAME/Code/squareberg-hub
 Restart=on-failure
 RestartSec=5s
 
