@@ -28,6 +28,7 @@ theme:
     - search.highlight
     - content.code.copy
     - content.code.annotate
+  logo: assets/logo-app.png
   icon:
     repo: fontawesome/brands/github
 

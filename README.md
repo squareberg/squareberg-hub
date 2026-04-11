@@ -11,6 +11,8 @@ A local application hub that aggregates personal productivity tools behind a uni
 - **`sqb` CLI** — install, start, stop, update apps; switch frontends
 - **macOS + Linux** — Unix sockets, `uv`, `npm`; no Docker, no external database server
 
+<p align="center"><img src="logo-square.png" width="75%"></p>
+
 ## Requirements
 
 - Python ≥ 3.10
