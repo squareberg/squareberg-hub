@@ -58,15 +58,16 @@ plugins:
             show_root_heading: true
 
 nav:
-  - Documentation: 
+  - Documentation:
     - Home: index.md
-    - Getting Started:
-      - Installation: getting-started/installation.md
-      - Hello World: getting-started/hello-world.md
+    - Getting Started: getting-started.md
     - Concepts:
       - Architecture: concepts/architecture.md
       - Apps: concepts/apps.md
       - Frontends: concepts/frontends.md
+    - Developers:
+      - Local Setup: developers/local-setup.md
+      - Hello World: developers/hello-world.md
   - Guide:
     - CLI Reference: guide/cli.md
     - Writing Apps: guide/writing-apps.md

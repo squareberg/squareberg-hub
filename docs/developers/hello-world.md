@@ -1,6 +1,9 @@
 # Hello World
 
-This walkthrough starts the hub, installs the bundled hello-world example app, and opens it in your browser. It covers the end-to-end flow you'll repeat for every app you add.
+This walkthrough starts the hub from a local clone, installs the bundled hello-world example app, and opens it in your browser. It covers the end-to-end flow you'll repeat for every app you develop or test locally.
+
+!!! note "Developer workflow"
+    This page assumes you have completed the [Local Setup](local-setup.md). The `examples/hello` app is part of the source tree and is not distributed with the PyPI package.
 
 ## 1. Start the Hub
 

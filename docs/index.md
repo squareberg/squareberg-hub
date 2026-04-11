@@ -18,31 +18,17 @@ Apps are developed and distributed as independent repositories. Installed apps l
 ## Quick Start
 
 ```bash
-# 1. Install the hub
-git clone https://github.com/jhadida/squareberg
-cd squareberg
-uv venv && uv pip install -e .
+# Install
+uv tool install squareberg-hub
 
-# 2. Build the dashboard
-cd hub/dashboard && npm install && npm run build && cd ../..
-
-# 3. Start the hub
+# Start the hub
 sqb start
-
-# 4. In a second terminal, install and start the hello-world app
-sqb app add examples/hello
-sqb app start hello
-
-# 5. Open the app in your browser
-open http://127.0.0.1:9100/apps/hello/
 ```
 
-!!! tip "Dashboard"
-    The hub dashboard at `http://127.0.0.1:9100/` shows all registered apps with start/stop controls and links to their UIs and API specs.
+Open `http://127.0.0.1:9100` in your browser.
 
 ## Next Steps
 
-- [Installation](getting-started/installation.md) — detailed prerequisites and setup
-- [Hello World walkthrough](getting-started/hello-world.md) — step-by-step first run
+- [Getting Started](getting-started.md) — install and run the hub
 - [Architecture overview](concepts/architecture.md) — how the hub, apps, and frontends fit together
 - [Writing Apps](guide/writing-apps.md) — create your own Squareberg app
