@@ -61,6 +61,7 @@ nav:
   - Documentation:
     - Home: index.md
     - Getting Started: getting-started.md
+    - Home Setup: home-setup.md
     - Concepts:
       - Architecture: concepts/architecture.md
       - Apps: concepts/apps.md
