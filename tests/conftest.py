@@ -13,22 +13,31 @@ _EXAMPLES_HELLO = _PROJECT_ROOT / "examples" / "hello"
 
 @pytest.fixture(scope="session", autouse=True)
 def isolated_xdg_home(tmp_path_factory):
-    """Point XDG_DATA_HOME at a temp directory with the hello app symlinked in.
+    """Point XDG_DATA_HOME and XDG_CONFIG_HOME at temp directories.
 
     This ensures tests are hermetic — they don't depend on what is (or isn't)
-    installed in the developer's or CI runner's real data directory.
+    installed in the developer's or CI runner's real XDG directories. The
+    hello example app is symlinked into the temp data dir so registry-based
+    tests can find it.
     """
-    tmp = tmp_path_factory.mktemp("xdg_data")
-    apps_dir = tmp / "squareberg" / "apps"
+    data_tmp = tmp_path_factory.mktemp("xdg_data")
+    config_tmp = tmp_path_factory.mktemp("xdg_config")
+
+    apps_dir = data_tmp / "squareberg" / "apps"
     apps_dir.mkdir(parents=True)
     (apps_dir / "hello").symlink_to(_EXAMPLES_HELLO, target_is_directory=True)
 
-    original = os.environ.get("XDG_DATA_HOME")
-    os.environ["XDG_DATA_HOME"] = str(tmp)
+    saved = {
+        "XDG_DATA_HOME": os.environ.get("XDG_DATA_HOME"),
+        "XDG_CONFIG_HOME": os.environ.get("XDG_CONFIG_HOME"),
+    }
+    os.environ["XDG_DATA_HOME"] = str(data_tmp)
+    os.environ["XDG_CONFIG_HOME"] = str(config_tmp)
 
-    yield tmp
+    yield data_tmp
 
-    if original is None:
-        os.environ.pop("XDG_DATA_HOME", None)
-    else:
-        os.environ["XDG_DATA_HOME"] = original
+    for key, value in saved.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value

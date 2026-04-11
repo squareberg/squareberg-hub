@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -61,10 +62,11 @@ class HubConfig:
 def load_config(path: Path | None = None) -> HubConfig:
     """Load hub configuration from a TOML file.
 
-    Falls back to defaults if the file does not exist.
+    Defaults to the user config at ``$XDG_CONFIG_HOME/squareberg/config.toml``.
+    Falls back to built-in defaults if the file does not exist.
     """
     if path is None:
-        path = _hub_root() / "config.toml"
+        path = get_config_path()
 
     if not path.exists():
         logger.debug("Config file not found at %s; using defaults.", path)
@@ -93,6 +95,42 @@ def load_config(path: Path | None = None) -> HubConfig:
 
 def _xdg_data_home() -> Path:
     return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+
+
+def _xdg_config_home() -> Path:
+    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+
+
+def get_config_dir() -> Path:
+    """Return the user config directory under XDG_CONFIG_HOME."""
+    return _xdg_config_home() / "squareberg"
+
+
+def get_config_path() -> Path:
+    """Return the path to the user's config.toml under XDG_CONFIG_HOME."""
+    return get_config_dir() / "config.toml"
+
+
+def get_default_config_path() -> Path:
+    """Return the path to the bundled default config (read-only, in site-packages)."""
+    return _hub_root() / "config.toml"
+
+
+def ensure_user_config() -> Path:
+    """Copy the bundled default config to the user config path if missing.
+
+    Returns the user config path.
+    """
+    user_path = get_config_path()
+    if user_path.exists():
+        return user_path
+
+    user_path.parent.mkdir(parents=True, exist_ok=True)
+    default_path = get_default_config_path()
+    if default_path.exists():
+        shutil.copy(default_path, user_path)
+        logger.info("Created user config at %s", user_path)
+    return user_path
 
 
 def get_socket_dir(config: HubConfig | None = None) -> Path:

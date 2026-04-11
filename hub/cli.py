@@ -27,7 +27,16 @@ else:
             "tomli is required on Python <3.11. Install it with: pip install tomli"
         ) from exc
 
-from .config import get_apps_dir, get_examples_dir, get_log_dir, get_socket_dir, load_config
+from .config import (
+    ensure_user_config,
+    get_apps_dir,
+    get_config_path,
+    get_default_config_path,
+    get_examples_dir,
+    get_log_dir,
+    get_socket_dir,
+    load_config,
+)
 from .registry import Registry
 
 # ---------------------------------------------------------------------------
@@ -71,8 +80,15 @@ frontend_cmd = typer.Typer(
     no_args_is_help=True,
 )
 
+config_cmd = typer.Typer(
+    name="config",
+    help="View or edit the user config.",
+    no_args_is_help=True,
+)
+
 app.add_typer(app_cmd)
 app.add_typer(frontend_cmd)
+app.add_typer(config_cmd)
 
 
 # ---------------------------------------------------------------------------
@@ -278,17 +294,23 @@ def _find_hub_pids() -> list[int]:
 @app.command()
 def start() -> None:
     """Start the Squareberg hub server (foreground)."""
+    # Ensure the user config exists in $XDG_CONFIG_HOME and reload, so the
+    # first run picks up the freshly-copied defaults.
+    ensure_user_config()
+    config = load_config()
+
+    hub_url = f"http://{config.host}:{config.port}"
     if _hub_is_running():
-        console.print("[yellow]Hub is already running[/yellow] at " + _HUB_URL)
+        console.print(f"[yellow]Hub is already running[/yellow] at {hub_url}")
         raise typer.Exit(0)
 
-    console.print(f"Starting Squareberg Hub on [bold]{_config.host}:{_config.port}[/bold] ...")
+    console.print(f"Starting Squareberg Hub on [bold]{config.host}:{config.port}[/bold] ...")
     import uvicorn
     uvicorn.run(
         "hub.main:app",
-        host=_config.host,
-        port=_config.port,
-        log_level=_config.log_level.lower(),
+        host=config.host,
+        port=config.port,
+        log_level=config.log_level.lower(),
     )
 
 
@@ -646,3 +668,56 @@ def frontend_switch(
     _build_frontend(app_dir, fe_path)
 
     console.print(f"[green]Frontend '{fe_name}' activated and rebuilt.[/green]")
+
+
+# ===================================================================
+# Config commands
+# ===================================================================
+
+@config_cmd.command("path")
+def config_path() -> None:
+    """Print the path to the user config file."""
+    console.print(str(get_config_path()))
+
+
+@config_cmd.command("show")
+def config_show() -> None:
+    """Print the current user config (or the bundled defaults if none exists)."""
+    path = get_config_path()
+    if path.exists():
+        console.print(f"[dim]# {path}[/dim]")
+        # Use markup=False so TOML section headers like [hub] aren't parsed as Rich tags
+        console.print(path.read_text(), markup=False)
+    else:
+        console.print(f"[yellow]No user config at {path}[/yellow]")
+        default_path = get_default_config_path()
+        if default_path.exists():
+            console.print(f"[dim]# Defaults from {default_path}[/dim]")
+            console.print(default_path.read_text(), markup=False)
+
+
+@config_cmd.command("edit")
+def config_edit() -> None:
+    """Open the user config in $EDITOR (creating it from defaults if missing)."""
+    ensure_user_config()
+    path = get_config_path()
+    editor = os.environ.get("EDITOR", "vi")
+    subprocess.run([editor, str(path)])
+
+
+@config_cmd.command("reset")
+def config_reset(
+    yes: bool = typer.Option(False, "-y", "--yes", help="Skip confirmation."),
+) -> None:
+    """Reset the user config to the bundled defaults."""
+    path = get_config_path()
+    if path.exists() and not yes:
+        if not typer.confirm(f"Overwrite {path}?"):
+            raise typer.Exit(0)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    default_path = get_default_config_path()
+    if not default_path.exists():
+        console.print(f"[red]Bundled default config not found at {default_path}.[/red]")
+        raise typer.Exit(1)
+    shutil.copy(default_path, path)
+    console.print(f"[green]Reset config at {path}[/green]")
